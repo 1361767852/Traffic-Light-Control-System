@@ -29,6 +29,7 @@ def import_train_configuration(config_file):
     config['gamma'] = content['agent'].getfloat('gamma')
     config['models_path_name'] = content['dir']['models_path_name']
     config['sumocfg_file_name'] = content['dir']['sumocfg_file_name']
+    config['simulation_folder'] = content['dir']['simulation_folder']
     return config
 
 
@@ -49,11 +50,12 @@ def import_test_configuration(config_file):
     config['num_actions'] = content['agent'].getint('num_actions')
     config['sumocfg_file_name'] = content['dir']['sumocfg_file_name']
     config['models_path_name'] = content['dir']['models_path_name']
-    config['model_to_test'] = content['dir'].getint('model_to_test') 
+    config['model_to_test'] = content['dir'].getint('model_to_test')
+    config['simulation_folder'] = content['dir']['simulation_folder']
     return config
 
 
-def set_sumo(gui, sumocfg_file_name, max_steps):
+def set_sumo(gui, folder, sumocfg_file_name, max_steps):
     """
     Configure various parameters of SUMO
     """
@@ -71,7 +73,7 @@ def set_sumo(gui, sumocfg_file_name, max_steps):
         sumoBinary = checkBinary('sumo-gui')
  
     # setting the cmd command to run sumo at simulation time
-    sumo_cmd = [sumoBinary, "-c", os.path.join('intersection', sumocfg_file_name), "--no-step-log", "true", "--waiting-time-memory", str(max_steps)]
+    sumo_cmd = [sumoBinary, "-c", os.path.join(folder, sumocfg_file_name), "--no-step-log", "--no-warnings", "true", "--waiting-time-memory", str(max_steps)]
 
     return sumo_cmd
 

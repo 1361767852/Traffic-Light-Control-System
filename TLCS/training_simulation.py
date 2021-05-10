@@ -4,15 +4,28 @@ import random
 import timeit
 import os
 
-# phase codes based on environment.net.xml
-PHASE_NS_GREEN = 0  # action 0 code 00
-PHASE_NS_YELLOW = 1
-PHASE_NSL_GREEN = 2  # action 1 code 01
-PHASE_NSL_YELLOW = 3
-PHASE_EW_GREEN = 4  # action 2 code 10
-PHASE_EW_YELLOW = 5
-PHASE_EWL_GREEN = 6  # action 3 code 11
-PHASE_EWL_YELLOW = 7
+
+
+def code_to_action(code):
+    if code == 0:
+        return {"gneJ0": 0, "gneJ1": 0}
+    if code == 1:
+        return {"gneJ0": 0, "gneJ1": 2}
+    if code == 2:
+        return {"gneJ0": 0, "gneJ1": 4}
+    if code == 3:
+        return {"gneJ0": 2, "gneJ1": 0}
+    if code == 4:
+        return {"gneJ0": 2, "gneJ1": 2}
+    if code == 5:
+        return {"gneJ0": 2, "gneJ1": 4}
+    if code == 6:
+        return {"gneJ0": 4, "gneJ1": 0}
+    if code == 7:
+        return {"gneJ0": 4, "gneJ1": 2}
+    if code == 8:
+        return {"gneJ0": 4, "gneJ1": 4}
+
 
 
 class Simulation:
@@ -41,13 +54,12 @@ class Simulation:
         start_time = timeit.default_timer()
 
         # first, generate the route file for this simulation and set up sumo
-        self._TrafficGen.generate_routefile(seed=episode)
+        self._TrafficGen.generate_traffic(seed=episode)
         traci.start(self._sumo_cmd)
         print("Simulating...")
 
         # inits
         self._step = 0
-        self._waiting_times = {}
         self._sum_neg_reward = 0
         self._sum_queue_length = 0
         self._sum_waiting_time = 0
@@ -55,7 +67,11 @@ class Simulation:
         old_state = -1
         old_action = -1
 
+        old_queue = 0
+
         while self._step < self._max_steps:
+
+            
 
             # get current state of the intersection
             current_state = self._get_state()
@@ -63,7 +79,9 @@ class Simulation:
             # calculate reward of previous action: (change in cumulative waiting time between actions)
             # waiting time = seconds waited by a car since the spawn in the environment, cumulated for every car in incoming lanes
             current_total_wait = self._collect_waiting_times()
-            reward = old_total_wait - current_total_wait
+
+            queue = self._get_queue_length()
+            reward = old_queue - queue
 
             # saving the data into the memory
             if self._step != 0:
@@ -72,19 +90,13 @@ class Simulation:
             # choose the light phase to activate, based on the current state of the intersection
             action = self._choose_action(current_state, epsilon)
 
-            # if the chosen phase is different from the last phase, activate the yellow phase
-            if self._step != 0 and old_action != action:
-                self._set_yellow_phase(old_action)
-                self._simulate(self._yellow_duration)
-
-            # execute the phase selected before
-            self._set_green_phase(action)
-            self._simulate(self._green_duration)
+            self._set_phase_and_simulate(old_action, action)
 
             # saving variables for later & accumulate reward
             old_state = current_state
             old_action = action
             old_total_wait = current_total_wait
+            old_queue = queue
 
             # saving only the meaningful reward to better see if the agent is behaving correctly
             if reward < 0:
@@ -124,18 +136,13 @@ class Simulation:
         """
         Retrieve the waiting time of every car in the incoming roads
         """
-        incoming_roads = ["E2TL", "N2TL", "W2TL", "S2TL"]
+        waiting_time = 0
         car_list = traci.vehicle.getIDList()
+
         for car_id in car_list:
-            wait_time = traci.vehicle.getAccumulatedWaitingTime(car_id)
-            road_id = traci.vehicle.getRoadID(car_id)  # get the road id where the car is located
-            if road_id in incoming_roads:  # consider only the waiting times of cars in incoming roads
-                self._waiting_times[car_id] = wait_time
-            else:
-                if car_id in self._waiting_times: # a car that was tracked has cleared the intersection
-                    del self._waiting_times[car_id] 
-        total_waiting_time = sum(self._waiting_times.values())
-        return total_waiting_time
+            waiting_time += traci.vehicle.getAccumulatedWaitingTime(car_id)
+
+        return waiting_time
 
 
     def _choose_action(self, state, epsilon):
@@ -147,52 +154,82 @@ class Simulation:
         else:
             return np.argmax(self._Model.predict_one(state)) # the best action given the current state
 
+    
+    def _get_changed_actions(self, old_action_number, action_number):
 
-    def _set_yellow_phase(self, old_action):
+        changed = []
+        old_actions = code_to_action(old_action_number)
+        actions = code_to_action(old_action_number)
+
+        for j in actions :
+            if actions[j] != old_actions[j] : 
+                changed.append(j)
+        return changed
+
+
+    def _set_phase_and_simulate(self, old_action_number, action_number):
+
+        phase_duration = self._green_duration
+
+        # if the chosen phase is different from the last phase, activate the yellow phase
+        if self._step != 0 and old_action_number != action_number:
+
+            self._set_yellow_phase(old_action_number, action_number)
+            self._simulate(self._yellow_duration)
+            phase_duration = self._green_duration - self._yellow_duration
+
+        
+        coresp = code_to_action(action_number)
+        for tls_id in coresp:
+            traci.trafficlight.setPhase(tls_id, coresp[tls_id])
+
+        self._simulate(phase_duration)
+
+        
+    
+    
+
+
+    def _set_yellow_phase(self, old_action_number, action_number):
         """
         Activate the correct yellow light combination in sumo
         """
-        yellow_phase_code = old_action * 2 + 1 # obtain the yellow phase code, based on the old action (ref on environment.net.xml)
-        traci.trafficlight.setPhase("TL", yellow_phase_code)
-
-
-    def _set_green_phase(self, action_number):
-        """
-        Activate the correct green light combination in sumo
-        """
-        if action_number == 0:
-            traci.trafficlight.setPhase("TL", PHASE_NS_GREEN)
-        elif action_number == 1:
-            traci.trafficlight.setPhase("TL", PHASE_NSL_GREEN)
-        elif action_number == 2:
-            traci.trafficlight.setPhase("TL", PHASE_EW_GREEN)
-        elif action_number == 3:
-            traci.trafficlight.setPhase("TL", PHASE_EWL_GREEN)
+        changed = self._get_changed_actions(old_action_number, action_number)
+        
+        for tlsID in traci.trafficlight.getIDList():
+            if tlsID in changed:
+                yellow_phase_code = code_to_action(old_action_number)[tlsID] + 1
+                traci.trafficlight.setPhase(tlsID, yellow_phase_code)
+            else :
+                phase_code = code_to_action(action_number)[tlsID]
+                traci.trafficlight.setPhase(tlsID, phase_code)
 
 
     def _get_queue_length(self):
         """
         Retrieve the number of cars with speed = 0 in every incoming lane
         """
-        halt_N = traci.edge.getLastStepHaltingNumber("N2TL")
-        halt_S = traci.edge.getLastStepHaltingNumber("S2TL")
-        halt_E = traci.edge.getLastStepHaltingNumber("E2TL")
-        halt_W = traci.edge.getLastStepHaltingNumber("W2TL")
-        queue_length = halt_N + halt_S + halt_E + halt_W
+        queue_length = 0
+        for id in traci.edge.getIDList():
+            queue_length += traci.edge.getLastStepHaltingNumber(id)
+
         return queue_length
 
 
+    
     def _get_state(self):
-        """
-        Retrieve the state of the intersection from sumo, in the form of cell occupancy
-        """
+
+        # Retrieve the state of the intersection from sumo, in the form of cell occupancy
+
         state = np.zeros(self._num_states)
         car_list = traci.vehicle.getIDList()
 
         for car_id in car_list:
             lane_pos = traci.vehicle.getLanePosition(car_id)
             lane_id = traci.vehicle.getLaneID(car_id)
-            lane_pos = 750 - lane_pos  # inversion of lane pos, so if the car is close to the traffic light -> lane_pos = 0 --- 750 = max len of a road
+            lane_pos = 400 - lane_pos
+            # inversion of lane pos, so if the car is close to the traffic light -> lane_pos = 0
+            # --- 750 = max len of a road
 
             # distance in meters from the traffic light -> mapping into cells
             if lane_pos < 7:
@@ -211,34 +248,32 @@ class Simulation:
                 lane_cell = 6
             elif lane_pos < 160:
                 lane_cell = 7
-            elif lane_pos < 400:
+            elif lane_pos < 250:
                 lane_cell = 8
-            elif lane_pos <= 750:
+            else:
                 lane_cell = 9
 
-            # finding the lane where the car is located 
+            # finding the lane where the car is located
             # x2TL_3 are the "turn left only" lanes
-            if lane_id == "W2TL_0" or lane_id == "W2TL_1" or lane_id == "W2TL_2":
+            edge_id = traci.lane.getEdgeID(lane_id)
+            if edge_id == "gneE48":
                 lane_group = 0
-            elif lane_id == "W2TL_3":
+            elif edge_id == "gneE49":
                 lane_group = 1
-            elif lane_id == "N2TL_0" or lane_id == "N2TL_1" or lane_id == "N2TL_2":
+            elif edge_id == "gneE83":
                 lane_group = 2
-            elif lane_id == "N2TL_3":
+            elif edge_id == "gneE90":
                 lane_group = 3
-            elif lane_id == "E2TL_0" or lane_id == "E2TL_1" or lane_id == "E2TL_2":
+            elif edge_id == "gneE89":
                 lane_group = 4
-            elif lane_id == "E2TL_3":
+            elif edge_id == "gneE68":
                 lane_group = 5
-            elif lane_id == "S2TL_0" or lane_id == "S2TL_1" or lane_id == "S2TL_2":
-                lane_group = 6
-            elif lane_id == "S2TL_3":
-                lane_group = 7
             else:
                 lane_group = -1
 
-            if lane_group >= 1 and lane_group <= 7:
-                car_position = int(str(lane_group) + str(lane_cell))  # composition of the two postion ID to create a number in interval 0-79
+            if 1 <= lane_group <= 5:
+                car_position = int(str(lane_group) + str(lane_cell))
+                # composition of the two postion ID to create a number in interval 0-79
                 valid_car = True
             elif lane_group == 0:
                 car_position = lane_cell
@@ -247,7 +282,8 @@ class Simulation:
                 valid_car = False  # flag for not detecting cars crossing the intersection or driving away from it
 
             if valid_car:
-                state[car_position] = 1  # write the position of the car car_id in the state array in the form of "cell occupied"
+                state[car_position] = 1
+                # write the position of the car car_id in the state array in the form of "cell occupied"
 
         return state
 

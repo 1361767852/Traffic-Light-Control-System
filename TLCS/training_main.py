@@ -7,6 +7,7 @@ from shutil import copyfile
 
 from training_simulation import Simulation
 from generator import TrafficGenerator
+from generate_traffic import Traffic_Generator
 from memory import Memory
 from model import TrainModel
 from visualization import Visualization
@@ -16,7 +17,7 @@ from utils import import_train_configuration, set_sumo, set_train_path
 if __name__ == "__main__":
 
     config = import_train_configuration(config_file='training_settings.ini')
-    sumo_cmd = set_sumo(config['gui'], config['sumocfg_file_name'], config['max_steps'])
+    sumo_cmd = set_sumo(config['gui'], config['simulation_folder'], config['sumocfg_file_name'], config['max_steps'])
     path = set_train_path(config['models_path_name'])
 
     Model = TrainModel(
@@ -33,9 +34,11 @@ if __name__ == "__main__":
         config['memory_size_min']
     )
 
-    TrafficGen = TrafficGenerator(
-        config['max_steps'], 
-        config['n_cars_generated']
+    Traffic_Generator = Traffic_Generator(
+        "intersection/traffic_flow/ain_naadja_flow.json",
+        "intersection/ain_naadja.rou.xml",
+        CAR_NUMBER = 2200,
+        SIMULATION_TIME = 2000
     )
 
     Visualization = Visualization(
@@ -46,7 +49,7 @@ if __name__ == "__main__":
     Simulation = Simulation(
         Model,
         Memory,
-        TrafficGen,
+        Traffic_Generator,
         sumo_cmd,
         config['gamma'],
         config['max_steps'],
