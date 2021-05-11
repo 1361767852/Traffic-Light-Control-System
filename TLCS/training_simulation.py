@@ -215,8 +215,18 @@ class Simulation:
 
         return queue_length
 
+    def _get_state(self):
 
-    
+        state = np.zeros(self._num_states)
+        edge_list = ["gneE48", "gneE49", "gneE83", "gneE89", "gneE90", "gneE68"]
+
+        for i, edge_id in enumerate(edge_list):
+            state[i] = traci.edge.getLastStepVehicleNumber(edge_id)
+
+        return state
+
+
+    """
     def _get_state(self):
 
         # Retrieve the state of the intersection from sumo, in the form of cell occupancy
@@ -286,6 +296,7 @@ class Simulation:
                 # write the position of the car car_id in the state array in the form of "cell occupied"
 
         return state
+        """
 
 
     def _replay(self):
