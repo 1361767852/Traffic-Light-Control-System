@@ -6,7 +6,6 @@ import datetime
 from shutil import copyfile
 
 from training_simulation import Simulation
-from generator import TrafficGenerator
 from generate_traffic import Traffic_Generator
 from memory import Memory
 from model import TrainModel
