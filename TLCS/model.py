@@ -26,13 +26,14 @@ class TrainModel:
         Build and compile a fully connected deep neural network
         """
         inputs = keras.Input(shape=(self._input_dim,))
-        x = layers.Dense(width, activation='relu')(inputs)
+        x = layers.Dense(self._input_dim, activation='relu')(inputs)
+
         for _ in range(num_layers):
             x = layers.Dense(width, activation='relu')(x)
-        outputs = layers.Dense(self._output_dim, activation='linear')(x)
+        outputs = layers.Dense(self._output_dim, activation='sigmoid')(x)
 
         model = keras.Model(inputs=inputs, outputs=outputs, name='my_model')
-        model.compile(loss=losses.mean_squared_error, optimizer=Adam(lr=self._learning_rate))
+        model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self._learning_rate))
         return model
     
 

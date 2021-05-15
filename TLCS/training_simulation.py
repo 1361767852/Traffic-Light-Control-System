@@ -44,6 +44,7 @@ class Simulation:
         self._avg_queue_length_store = []
         self._training_epochs = training_epochs
 
+
     def run(self, episode, epsilon):
         """
         Runs an episode of simulation, then starts a training session
@@ -51,7 +52,10 @@ class Simulation:
         start_time = timeit.default_timer()
 
         # first, generate the route file for this simulation and set up sumo
-        self._TrafficGen.generate_traffic(seed=episode)
+
+        self._TrafficGen.generate_traffic(episode)
+
+        # self._TrafficGen.generate_traffic(seed=episode)
         traci.start(self._sumo_cmd)
         print("Simulating...")
 
@@ -71,13 +75,14 @@ class Simulation:
             # get current state of the intersection
             current_state = self._get_state()
 
+
             # calculate reward of previous action: (change in cumulative waiting time between actions)
             # waiting time = seconds waited by a car since the spawn in the environment,
             # cumulated for every car in incoming lanes
             current_total_wait = self._collect_waiting_times()
 
-            queue = self._get_queue_length()
-            reward = old_queue - queue
+            #queue = self._get_queue_length()
+            reward = old_total_wait - current_total_wait
 
             # saving the data into the memory
             if self._step != 0:
@@ -92,7 +97,7 @@ class Simulation:
             old_state = current_state
             old_action = action
             old_total_wait = current_total_wait
-            old_queue = queue
+            #old_queue = queue
 
             # saving only the meaningful reward to better see if the agent is behaving correctly
             if reward < 0:
@@ -197,10 +202,12 @@ class Simulation:
         Retrieve the number of cars with speed = 0 in every incoming lane
         """
         queue_length = 0
-        for id in traci.edge.getIDList():
+        edge_list = ["gneE48", "gneE49", "gneE83", "gneE89", "gneE90", "gneE68"]
+        for id in edge_list:
             queue_length += traci.edge.getLastStepHaltingNumber(id)
 
         return queue_length
+
 
     def _get_state(self):
 
@@ -208,8 +215,15 @@ class Simulation:
         # test later if we can add all edges or only the controlled ones
         edge_list = ["gneE48", "gneE49", "gneE83", "gneE89", "gneE90", "gneE68"]
 
-        for i, edge_id in enumerate(edge_list):
-            state[i] = traci.edge.getLastStepVehicleNumber(edge_id)
+        for edge_id in edge_list:
+            for car_id in traci.edge.getLastStepVehicleIDs(edge_id):
+                lane_id = traci.vehicle.getLaneID(car_id)
+                lane_pos = traci.vehicle.getLanePosition(car_id)
+                lane_pos = traci.lane.getLength(lane_id) - lane_pos
+
+                if lane_pos <= 200:
+                    index = edge_list.index(edge_id)
+                    state[index] += 1
 
         return state
 

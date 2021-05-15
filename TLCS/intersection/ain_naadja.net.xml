@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 05/12/21 03:49:31 by Eclipse SUMO netedit Version 1.8.0
+
+<!-- generated on 05/10/21 17:38:47 by Eclipse SUMO netedit Version 1.8.0
+>>>>>>> parent of fcf2f66... changed state to number of cars
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
@@ -179,7 +181,9 @@
         <phase duration="3"  state="rrrrrryyy"/>
     </tlLogic>
 
+    <junction id="2209102704" type="dead_end" x="652.68" y="598.01" incLanes="" intLanes="" shape="652.68,598.01"/>
     <junction id="2268682171" type="dead_end" x="0.00" y="3088.79" incLanes="" intLanes="" shape="0.00,3088.79"/>
+    <junction id="288389113" type="dead_end" x="643.22" y="607.23" incLanes="" intLanes="" shape="643.22,607.23"/>
     <junction id="288393033" type="dead_end" x="2741.53" y="0.00" incLanes="" intLanes="" shape="2741.53,0.00"/>
     <junction id="326512502" type="dead_end" x="90.00" y="2890.64" incLanes="" intLanes="" shape="90.00,2890.64"/>
     <junction id="335013242" type="dead_end" x="2584.64" y="2239.52" incLanes="gneE64_0 gneE64_1" intLanes="" shape="2589.67,2235.57 2584.64,2239.52"/>
