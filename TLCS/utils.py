@@ -15,6 +15,7 @@ def import_train_configuration(config_file):
     config['total_episodes'] = content['simulation'].getint('total_episodes')
     config['max_steps'] = content['simulation'].getint('max_steps')
     config['n_cars_generated'] = content['simulation'].getint('n_cars_generated')
+    config['simulation_time'] = content['simulation'].getint('simulation_time')
     config['green_duration'] = content['simulation'].getint('green_duration')
     config['yellow_duration'] = content['simulation'].getint('yellow_duration')
     config['num_layers'] = content['model'].getint('num_layers')
@@ -30,6 +31,9 @@ def import_train_configuration(config_file):
     config['models_path_name'] = content['dir']['models_path_name']
     config['sumocfg_file_name'] = content['dir']['sumocfg_file_name']
     config['simulation_folder'] = content['dir']['simulation_folder']
+    config['flow_file'] = content['dir']['flow_file']
+    config['route_file'] = content['dir']['route_file']
+
     return config
 
 
@@ -43,6 +47,7 @@ def import_test_configuration(config_file):
     config['gui'] = content['simulation'].getboolean('gui')
     config['max_steps'] = content['simulation'].getint('max_steps')
     config['n_cars_generated'] = content['simulation'].getint('n_cars_generated')
+    config['simulation_time'] = content['simulation'].getint('simulation_time')
     config['episode_seed'] = content['simulation'].getint('episode_seed')
     config['green_duration'] = content['simulation'].getint('green_duration')
     config['yellow_duration'] = content['simulation'].getint('yellow_duration')
@@ -52,6 +57,8 @@ def import_test_configuration(config_file):
     config['models_path_name'] = content['dir']['models_path_name']
     config['model_to_test'] = content['dir'].getint('model_to_test')
     config['simulation_folder'] = content['dir']['simulation_folder']
+    config['flow_file'] = content['dir']['flow_file']
+    config['route_file'] = content['dir']['route_file']
     return config
 
 

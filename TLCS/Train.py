@@ -1,74 +1,36 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 import traci
 import numpy as np
 import random
 import timeit
+from Simulation import Simulation
+
+import os
+import datetime
+from shutil import copyfile
+
+from generate_traffic import Traffic_Generator
+from memory import Memory
+from model import TrainModel
+from visualization import Visualization
+from utils import import_train_configuration, set_sumo, set_train_path
 
 
-lane_groups = [
-
-    ["gneE4_0", "gneE4_1"],
-
-    ["gneE5_0"],
-    ["gneE5_1"],
-
-    ["gneE6_0"],
-    ["gneE6_1"],
-
-    ["-gneE4_0"],
-    ["-gneE4_1"],
-
-    ["gneE8_0"],
-    ["gneE8_1"],
-
-    ["gneE9_0"],
-    ["gneE9_1"],   
-]
-
-Roads = ["gneE4","-gneE4", "gneE5", "gneE6", "gneE8", "gneE9"]
-
-
-def action_to_phase(code):
-    if code == 0:
-        return {"gneJ6": 0, "gneJ7": 0}
-    if code == 1:
-        return {"gneJ6": 0, "gneJ7": 2}
-    if code == 2:
-        return {"gneJ6": 0, "gneJ7": 4}
-    if code == 3:
-        return {"gneJ6": 2, "gneJ7": 0}
-    if code == 4:
-        return {"gneJ6": 2, "gneJ7": 2}
-    if code == 5:
-        return {"gneJ6": 2, "gneJ7": 4}
-    if code == 6:
-        return {"gneJ6": 4, "gneJ7": 0}
-    if code == 7:
-        return {"gneJ6": 4, "gneJ7": 2}
-    if code == 8:
-        return {"gneJ6": 4, "gneJ7": 4}
-
-
-
-
-class Simulation:
+class Train(Simulation):
     def __init__(self, Model, Memory, TrafficGen, sumo_cmd, gamma, max_steps, green_duration, yellow_duration,
                  num_states, num_actions, training_epochs):
-        self._Model = Model
+
+        super().__init__(Model, TrafficGen, sumo_cmd, max_steps, green_duration,
+                         yellow_duration, num_states, num_actions)
+
         self._Memory = Memory
-        self._TrafficGen = TrafficGen
         self._gamma = gamma
-        self._step = 0
-        self._sumo_cmd = sumo_cmd
-        self._max_steps = max_steps
-        self._green_duration = green_duration
-        self._yellow_duration = yellow_duration
-        self._num_states = num_states
-        self._num_actions = num_actions
         self._reward_store = []
         self._cumulative_wait_store = []
         self._avg_queue_length_store = []
         self._training_epochs = training_epochs
-
 
     def run(self, episode, epsilon):
         """
@@ -94,20 +56,17 @@ class Simulation:
         old_state = -1
         old_action = -1
 
-        old_queue = 0
-
         while self._step < self._max_steps:
 
             # get current state of the intersection
             current_state = self._get_state()
-
 
             # calculate reward of previous action: (change in cumulative waiting time between actions)
             # waiting time = seconds waited by a car since the spawn in the environment,
             # cumulated for every car in incoming lanes
             current_total_wait = self._collect_waiting_times()
 
-            #queue = self._get_queue_length()
+            # queue = self._get_queue_length()
             reward = old_total_wait - current_total_wait
 
             # saving the data into the memory
@@ -123,7 +82,7 @@ class Simulation:
             old_state = current_state
             old_action = action
             old_total_wait = current_total_wait
-            #old_queue = queue
+            # old_queue = queue
 
             # saving only the meaningful reward to better see if the agent is behaving correctly
             if reward < 0:
@@ -160,36 +119,6 @@ class Simulation:
             # for each car, therefore queue_lenght == waited_seconds
             self._sum_waiting_time += queue_length
 
-
-    def _collect_waiting_times(self):
-        """
-        Retrieve the waiting time of every car in the incoming roads
-        """
-        waiting_time = 0
-        car_list = traci.vehicle.getIDList()
-
-        for car_id in car_list:
-            waiting_time += traci.vehicle.getAccumulatedWaitingTime(car_id)
-
-        return waiting_time
-
-    def _collect_waiting_times(self):
-        """
-        Retrieve the waiting time of every car in the incoming roads
-        """
-        car_list = traci.vehicle.getIDList()
-        for car_id in car_list:
-            wait_time = traci.vehicle.getAccumulatedWaitingTime(car_id)
-            road_id = traci.vehicle.getRoadID(car_id)  # get the road id where the car is located
-            if road_id in Roads:  # consider only the waiting times of cars in incoming roads
-                self._waiting_times[car_id] = wait_time
-            else:
-                if car_id in self._waiting_times: # a car that was tracked has cleared the intersection
-                    del self._waiting_times[car_id] 
-        total_waiting_time = sum(self._waiting_times.values())
-        return total_waiting_time
-
-
     def _choose_action(self, state, epsilon):
         """
         Decide wheter to perform an explorative or exploitative action, according to an epsilon-greedy policy
@@ -198,71 +127,6 @@ class Simulation:
             return random.randint(0, self._num_actions - 1)  # random action
         else:
             return np.argmax(self._Model.predict_one(state))  # the best action given the current state
-
-    
-    def _get_changed_actions(self, old_action_number, action_number):
-
-        changed = []
-        old_actions = action_to_phase(old_action_number)
-        actions = action_to_phase(action_number)
-
-        for j in actions:
-            if actions[j] != old_actions[j]:
-                changed.append(j)
-        return changed
-    
-    def _set_phase_and_simulate(self, old_action_number, action_number):
-
-        phase_duration = self._green_duration
-
-        # if the chosen phase is different from the last phase, activate the yellow phase
-        if self._step != 0 and old_action_number != action_number:
-            self._set_yellow_phase(old_action_number, action_number)
-            self._simulate(self._yellow_duration)
-            phase_duration = self._green_duration - self._yellow_duration
-
-        coresp = action_to_phase(action_number)
-        for tls_id in coresp:
-            traci.trafficlight.setPhase(tls_id, coresp[tls_id])
-        
-        self._simulate(phase_duration)
-
-    def _set_yellow_phase(self, old_action_number, action_number):
-        """
-        Activate the correct yellow light combination in sumo
-        """
-        changed = self._get_changed_actions(old_action_number, action_number)
-
-        for tlsID in traci.trafficlight.getIDList():
-            if tlsID in changed:
-                yellow_phase_code = action_to_phase(old_action_number)[tlsID] + 1
-                traci.trafficlight.setPhase(tlsID, yellow_phase_code)
-            else:
-                phase_code = action_to_phase(action_number)[tlsID]
-                traci.trafficlight.setPhase(tlsID, phase_code)
-
-    def _get_queue_length(self):
-        """
-        Retrieve the number of cars with speed = 0 in every incoming lane
-        """
-        queue_length = 0
-        for id in Roads:
-            queue_length += traci.edge.getLastStepHaltingNumber(id)
-
-        return queue_length
-
-
-    def _get_state(self):
-        """
-        Retrieve the state of the intersection from sumo, in the form of cell occupancy
-        """
-        state = np.zeros(self._num_states)
-        
-        for i, group in enumerate(lane_groups):
-            for lane_id in group :
-                state[i] += traci.lane.getLastStepHaltingNumber(lane_id)
-        
-        return state
 
     def _replay(self):
         """
@@ -312,3 +176,77 @@ class Simulation:
     @property
     def avg_queue_length_store(self):
         return self._avg_queue_length_store
+
+
+if __name__ == "__main__":
+
+    config = import_train_configuration(config_file='training_settings.ini')
+    sumo_cmd = set_sumo(config['gui'], config['simulation_folder'], config['sumocfg_file_name'], config['max_steps'])
+    path = set_train_path(config['models_path_name'])
+
+    Model = TrainModel(
+        config['num_layers'],
+        config['width_layers'],
+        config['batch_size'],
+        config['learning_rate'],
+        input_dim=config['num_states'],
+        output_dim=config['num_actions']
+    )
+
+    Memory = Memory(
+        config['memory_size_max'],
+        config['memory_size_min']
+    )
+
+    Traffic_Generator = Traffic_Generator(
+        config["flow_file"],
+        config["route_file"],
+        config["n_cars_generated"],
+        config["simulation_time"]
+    )
+
+    Visualization = Visualization(
+        path,
+        dpi=96
+    )
+
+    Train = Train(
+        Model,
+        Memory,
+        Traffic_Generator,
+        sumo_cmd,
+        config['gamma'],
+        config['max_steps'],
+        config['green_duration'],
+        config['yellow_duration'],
+        config['num_states'],
+        config['num_actions'],
+        config['training_epochs']
+    )
+
+    episode = 0
+    timestamp_start = datetime.datetime.now()
+
+    while episode < config['total_episodes']:
+        print('\n----- Episode', str(episode + 1), 'of', str(config['total_episodes']))
+        epsilon = 1.0 - (episode / config[
+            'total_episodes'])  # set the epsilon for this episode according to epsilon-greedy policy
+        simulation_time, training_time = Train.run(episode, epsilon)  # run the simulation
+        print('Simulation time:', simulation_time, 's - Training time:', training_time, 's - Total:',
+              round(simulation_time + training_time, 1), 's')
+        episode += 1
+
+    print("\n----- Start time:", timestamp_start)
+    print("----- End time:", datetime.datetime.now())
+    print("----- Session info saved at:", path)
+
+    Model.save_model(path)
+
+    copyfile(src='training_settings.ini', dst=os.path.join(path, 'training_settings.ini'))
+
+    Visualization.save_data_and_plot(data=Train.reward_store, filename='reward', xlabel='Episode',
+                                     ylabel='Cumulative negative reward')
+    Visualization.save_data_and_plot(data=Train.cumulative_wait_store, filename='delay', xlabel='Episode',
+                                     ylabel='Cumulative delay (s)')
+    Visualization.save_data_and_plot(data=Train.avg_queue_length_store, filename='queue', xlabel='Episode',
+                                     ylabel='Average queue length (vehicles)')
