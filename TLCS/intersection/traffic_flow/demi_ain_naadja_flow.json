@@ -1,0 +1,42 @@
+{	
+
+	"start" : ["gneE83", "gneE48", "gneE49"],
+
+	"gneE48" : [
+		{
+			"edge" : "gneE90",
+			"probability" : "0.5"
+		},
+
+		{
+			"edge" : "gneE81",
+			"probability" : "0.5"
+		}
+	],
+
+	"gneE83":[
+		{
+			"edge" : "gneE47",
+			"probability" : "0.5"
+		},
+
+		{
+			"edge" : "gneE81",
+			"probability" : "0.5"
+		}
+	],
+
+	"gneE49":[
+		{
+			"edge" : "gneE90",
+			"probability" : "0.5"
+		},
+
+		{
+			"edge" : "gneE47",
+			"probability" : "0.5"
+		}
+	]
+
+}
+

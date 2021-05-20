@@ -30,10 +30,10 @@ class TrainModel:
 
         for _ in range(num_layers):
             x = layers.Dense(width, activation='relu')(x)
-        outputs = layers.Dense(self._output_dim, activation='sigmoid')(x)
+        outputs = layers.Dense(self._output_dim, activation='linear')(x)
 
         model = keras.Model(inputs=inputs, outputs=outputs, name='my_model')
-        model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self._learning_rate))
+        model.compile(loss=losses.mean_squared_error, optimizer=Adam(lr=self._learning_rate))
         return model
     
 

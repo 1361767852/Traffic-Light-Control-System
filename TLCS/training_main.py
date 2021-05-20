@@ -34,10 +34,10 @@ if __name__ == "__main__":
     )
 
     Traffic_Generator = Traffic_Generator(
-        "intersection/traffic_flow/ain_naadja_flow.json",
-        "intersection/ain_naadja.rou.xml",
-        CAR_NUMBER = 300,
-        SIMULATION_TIME = 300
+        "intersection/traffic_flow/one_flow.json",
+        "intersection/one.rou.xml",
+        CAR_NUMBER = 1000,
+        SIMULATION_TIME = 1000
     )
 
     Visualization = Visualization(

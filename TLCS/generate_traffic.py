@@ -74,11 +74,21 @@ class Traffic_Generator:
 		return connections
 
 
+	
+	def choose_start(self):
+		start_edges = self.connections["start"]
+
+		pb = np.random.random()
+		for edge in start_edges:
+			if pb <= float(start_edges[edge]):
+				return edge
+
+
+
 
 	def generate_path(self):
 
-		start_edges = self.connections["start"]
-		start = start_edges[np.random.randint(0, len(start_edges))]
+		start = self.choose_start()
 		path = [start]
 		edge = start
 
@@ -174,6 +184,11 @@ class Traffic_Generator:
 
 if __name__ == "__main__":
 
-	t = Traffic_Generator()
-	t.generate_traffic()
+	CONNECTION_FILE = "intersection/traffic_flow/one_flow.json"
+	OUT_FILE = "intersection/one.rou.xml"
+	CAR_NUMBER = 2100
+	SIMULATION_TIME = 2000 # in seconds
+
+	t = Traffic_Generator(CONNECTION_FILE, OUT_FILE, CAR_NUMBER, SIMULATION_TIME)
+	t.generate_traffic(5)
 
