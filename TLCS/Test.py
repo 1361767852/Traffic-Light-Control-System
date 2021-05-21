@@ -16,9 +16,6 @@ from visualization import Visualization
 from utils import import_test_configuration, set_sumo, set_test_path
 
 
-
-
-
 class Test(Simulation):
     def __init__(self, Model, TrafficGen, sumo_cmd, max_steps, green_duration, yellow_duration, num_states,
                  num_actions):
@@ -74,8 +71,7 @@ class Test(Simulation):
         """
         Proceed with the simulation in sumo
         """
-        if (
-                self._step + steps_todo) >= self._max_steps:  # do not do more steps than the maximum allowed number of steps
+        if (self._step + steps_todo) >= self._max_steps:
             steps_todo = self._max_steps - self._step
 
         while steps_todo > 0:
@@ -101,8 +97,7 @@ class Test(Simulation):
 
 
 if __name__ == "__main__":
-
-    config = import_test_configuration(config_file='testing_settings.ini')
+    config = import_test_configuration(config_file='settings/testing_settings.ini')
     sumo_cmd = set_sumo(config['gui'], config['simulation_folder'], config['sumocfg_file_name'], config['max_steps'])
     model_path, plot_path = set_test_path(config['models_path_name'], config['model_to_test'])
 
@@ -134,13 +129,16 @@ if __name__ == "__main__":
         config['num_actions']
     )
 
+
+
     print('\n----- Test episode')
     simulation_time = Test.run(config['episode_seed'])  # run the simulation
     print('Simulation time:', simulation_time, 's')
 
     print("----- Testing info saved at:", plot_path)
 
-    copyfile(src='testing_settings.ini', dst=os.path.join(plot_path, 'testing_settings.ini'))
+    copyfile(src='settings/testing_settings.ini', dst=os.path.join(plot_path, 'testing_settings.ini'))
 
     Visualization.save_data_and_plot(data=Test.reward_episode, filename='reward', xlabel='Action step', ylabel='Reward')
-    Visualization.save_data_and_plot(data=Test.queue_length_episode, filename='queue', xlabel='Step', ylabel='Queue lenght (vehicles)')
+    Visualization.save_data_and_plot(data=Test.queue_length_episode, filename='queue', xlabel='Step',
+                                     ylabel='Queue length (vehicles)')

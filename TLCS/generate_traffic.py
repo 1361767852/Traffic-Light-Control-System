@@ -159,10 +159,6 @@ class Traffic_Generator:
 			car_id += n_cars
 			time += 1
 
-		
-
-		
-
 
 
 	def generate_traffic(self, seed):

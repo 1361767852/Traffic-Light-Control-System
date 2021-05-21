@@ -1,78 +1,64 @@
-{	
-
-	"start" : ["gneE68", "gneE89", "gneE48", "gneE49"],
-
-	"gneE48" : [
+{
+	"start": {
+		"gneE5": "0.35",
+		"gneE8": "0.7",
+		"gneE9": "0.85",
+		"gneE6": "1"
+	},
+	"gneE4": [
 		{
-			"edge" : "gneE90",
-			"probability" : "0.5"
-		},
-
-		{
-			"edge" : "gneE81",
-			"probability" : "0.5"
+			"edge": "-gneE5",
+			"probability": "1"
 		}
 	],
-
-	"gneE83":[
+	"gneE5": [
 		{
-			"edge" : "gneE47",
-			"probability" : "0.5"
+			"edge": "-gneE4",
+			"probability": "0.3"
 		},
-
 		{
-			"edge" : "gneE81",
-			"probability" : "0.5"
+			"edge": "-gneE6",
+			"probability": "1"
 		}
 	],
-
-	"gneE49":[
+	"gneE6": [
 		{
-			"edge" : "gneE90",
-			"probability" : "0.5"
+			"edge": "-gneE5",
+			"probability": "0.2"
 		},
-
 		{
-			"edge" : "gneE47",
-			"probability" : "0.5"
+			"edge": "-gneE4",
+			"probability": "1"
 		}
 	],
-
-	"gneE89":[
+	"gneE8": [
 		{
-			"edge" : "gneE83",
-			"probability" : "0.5"
+			"edge": "-gneE9",
+			"probability": "0.2"
 		},
-
 		{
-			"edge" : "gneE64",
-			"probability" : "0.5"
+			"edge": "gneE4",
+			"probability": "1"
 		}
 	],
-
-	"gneE90":[
+	"gneE9": [
 		{
-			"edge" : "gneE79",
-			"probability" : "0.5"
+			"edge": "-gneE8",
+			"probability": "0.4"
 		},
-
 		{
-			"edge" : "gneE64",
-			"probability" : "0.5"
+			"edge": "gneE4",
+			"probability": "1"
 		}
 	],
-
-	"gneE68":[
+	"-gneE4": [
 		{
-			"edge" : "gneE79",
-			"probability" : "0.5"
+			"edge": "-gneE9",
+			"probability": "0.5"
 		},
-
 		{
-			"edge" : "gneE83",
-			"probability" : "0.5"
+			"edge": "-gneE8",
+			"probability": "0.5"
 		}
 	]
-
 }
-

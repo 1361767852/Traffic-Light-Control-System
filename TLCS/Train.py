@@ -65,8 +65,6 @@ class Train(Simulation):
             # waiting time = seconds waited by a car since the spawn in the environment,
             # cumulated for every car in incoming lanes
             current_total_wait = self._collect_waiting_times()
-
-            # queue = self._get_queue_length()
             reward = old_total_wait - current_total_wait
 
             # saving the data into the memory
@@ -180,7 +178,7 @@ class Train(Simulation):
 
 if __name__ == "__main__":
 
-    config = import_train_configuration(config_file='training_settings.ini')
+    config = import_train_configuration(config_file='settings/training_settings.ini')
     sumo_cmd = set_sumo(config['gui'], config['simulation_folder'], config['sumocfg_file_name'], config['max_steps'])
     path = set_train_path(config['models_path_name'])
 
@@ -229,8 +227,7 @@ if __name__ == "__main__":
 
     while episode < config['total_episodes']:
         print('\n----- Episode', str(episode + 1), 'of', str(config['total_episodes']))
-        epsilon = 1.0 - (episode / config[
-            'total_episodes'])  # set the epsilon for this episode according to epsilon-greedy policy
+        epsilon = 1.0 - (episode / config['total_episodes'])
         simulation_time, training_time = Train.run(episode, epsilon)  # run the simulation
         print('Simulation time:', simulation_time, 's - Training time:', training_time, 's - Total:',
               round(simulation_time + training_time, 1), 's')
@@ -242,7 +239,7 @@ if __name__ == "__main__":
 
     Model.save_model(path)
 
-    copyfile(src='training_settings.ini', dst=os.path.join(path, 'training_settings.ini'))
+    copyfile(src='settings/training_settings.ini', dst=os.path.join(path, 'training_settings.ini'))
 
     Visualization.save_data_and_plot(data=Train.reward_store, filename='reward', xlabel='Episode',
                                      ylabel='Cumulative negative reward')
