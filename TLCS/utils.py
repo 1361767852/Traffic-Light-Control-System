@@ -3,6 +3,8 @@ from sumolib import checkBinary
 import os
 import sys
 
+def set_path(path, sim_name, file):
+    return path + "/" + sim_name + file
 
 def import_train_configuration(config_file):
     """
@@ -29,10 +31,16 @@ def import_train_configuration(config_file):
     config['num_actions'] = content['agent'].getint('num_actions')
     config['gamma'] = content['agent'].getfloat('gamma')
     config['models_path_name'] = content['dir']['models_path_name']
-    config['sumocfg_file_name'] = content['dir']['sumocfg_file_name']
-    config['simulation_folder'] = content['dir']['simulation_folder']
-    config['flow_file'] = content['dir']['flow_file']
-    config['route_file'] = content['dir']['route_file']
+
+    simulation_name = content['dir']['simulation_name']
+
+    path = content['dir']['simulation_folder'] + "/" + simulation_name
+
+    config['simulation_folder'] = path
+    config['sumocfg_file_name'] = simulation_name + '.sumocfg'
+    config['flow_file'] = set_path(path, simulation_name, '_flow.json')
+    config['route_file'] = set_path(path, simulation_name, '.rou.xml')
+    config['map'] = set_path(path, simulation_name, "_map.json")
 
     return config
 
@@ -53,12 +61,20 @@ def import_test_configuration(config_file):
     config['yellow_duration'] = content['simulation'].getint('yellow_duration')
     config['num_states'] = content['agent'].getint('num_states')
     config['num_actions'] = content['agent'].getint('num_actions')
-    config['sumocfg_file_name'] = content['dir']['sumocfg_file_name']
+
     config['models_path_name'] = content['dir']['models_path_name']
     config['model_to_test'] = content['dir'].getint('model_to_test')
-    config['simulation_folder'] = content['dir']['simulation_folder']
-    config['flow_file'] = content['dir']['flow_file']
-    config['route_file'] = content['dir']['route_file']
+
+    simulation_name = content['dir']['simulation_name']
+
+    path = content['dir']['simulation_folder'] + "/" + simulation_name
+
+    config['simulation_folder'] = path
+    config['sumocfg_file_name'] = simulation_name + '.sumocfg'
+    config['flow_file'] = set_path(path, simulation_name, '_flow.json')
+    config['route_file'] = set_path(path, simulation_name, '.rou.xml')
+    config['map'] = set_path(path, simulation_name, "_map.json")
+
     return config
 
 
@@ -78,9 +94,10 @@ def set_sumo(gui, folder, sumocfg_file_name, max_steps):
         sumoBinary = checkBinary('sumo')
     else:
         sumoBinary = checkBinary('sumo-gui')
- 
+
     # setting the cmd command to run sumo at simulation time
-    sumo_cmd = [sumoBinary, "-c", os.path.join(folder, sumocfg_file_name), "--no-step-log", "--no-warnings", "true", "--waiting-time-memory", str(max_steps)]
+    sumo_cmd = [sumoBinary, "-c", os.path.join(folder, sumocfg_file_name), "--no-step-log", "--no-warnings", "true",
+                "--waiting-time-memory", str(max_steps)]
 
     return sumo_cmd
 
@@ -99,20 +116,20 @@ def set_train_path(models_path_name):
     else:
         new_version = '1'
 
-    data_path = os.path.join(models_path, 'model_'+new_version, '')
+    data_path = os.path.join(models_path, 'model_' + new_version, '')
     os.makedirs(os.path.dirname(data_path), exist_ok=True)
-    return data_path 
+    return data_path
 
 
 def set_test_path(models_path_name, model_n):
     """
     Returns a model path that identifies the model number provided as argument and a newly created 'test' path
     """
-    model_folder_path = os.path.join(os.getcwd(), models_path_name, 'model_'+str(model_n), '')
+    model_folder_path = os.path.join(os.getcwd(), models_path_name, 'model_' + str(model_n), '')
 
-    if os.path.isdir(model_folder_path):    
+    if os.path.isdir(model_folder_path):
         plot_path = os.path.join(model_folder_path, 'test', '')
         os.makedirs(os.path.dirname(plot_path), exist_ok=True)
         return model_folder_path, plot_path
-    else: 
+    else:
         sys.exit('The model number specified does not exist in the models folder')

@@ -180,8 +180,8 @@ class Traffic_Generator:
 
 if __name__ == "__main__":
 
-	CONNECTION_FILE = "intersection/traffic_flow/one_flow.json"
-	OUT_FILE = "intersection/one.rou.xml"
+	CONNECTION_FILE = "intersection/four/four_flow.json"
+	OUT_FILE = "intersection/four/four.rou.xml"
 	CAR_NUMBER = 2100
 	SIMULATION_TIME = 2000 # in seconds
 

@@ -1,8 +1,9 @@
 {
 	"start": {
-		"gneE5": "0.35",
-		"gneE8": "0.7",
-		"gneE9": "0.85",
+		"gneE5": "0.3",
+		"gneE8": "0.5",
+		"gneE12":"0.8",
+		"-gneE11":"0.9",
 		"gneE6": "1"
 	},
 	"gneE4": [
@@ -59,6 +60,36 @@
 		{
 			"edge": "-gneE8",
 			"probability": "0.5"
+		}
+	],
+	"-gneE9": [
+		{
+			"edge": "gneE11",
+			"probability": "0.5"
+		},
+		{
+			"edge": "-gneE12",
+			"probability": "1"
+		}
+	],
+	"gneE12": [
+		{
+			"edge": "gneE11",
+			"probability": "0.2"
+		},
+		{
+			"edge": "gneE9",
+			"probability": "1"
+		}
+	],
+	"-gneE11": [
+		{
+			"edge": "-gneE12",
+			"probability": "0.2"
+		},
+		{
+			"edge": "gneE9",
+			"probability": "1"
 		}
 	]
 }

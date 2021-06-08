@@ -1,0 +1,42 @@
+{
+    "roads" : ["gneE4", "-gneE4", "gneE5", "gneE6", "gneE8", "gneE9", "-gneE9", "gneE12", "-gneE11"],
+
+    "lane_groups" : [
+
+            ["gneE4_0", "gneE4_1"],
+
+            ["gneE5_0"],
+            ["gneE5_1"],
+
+            ["gneE6_0"],
+            ["gneE6_1"],
+
+            ["-gneE4_0"],
+            ["-gneE4_1"],
+
+            ["gneE8_0"],
+            ["gneE8_1"],
+
+            ["gneE9_0"],
+            ["gneE9_1"],
+
+            ["-gneE9_0"],
+            ["-gneE9_1"],
+
+            ["-gneE11_0"],
+            ["-gneE11_1"],
+
+            ["gneE12_0"],
+            ["gneE12_1"]
+        ],
+
+    "num_states" : {
+
+                    "gneJ6" : 3,
+                    "gneJ7" : 3,
+                    "gneJ12" : 3
+
+                }
+
+
+}

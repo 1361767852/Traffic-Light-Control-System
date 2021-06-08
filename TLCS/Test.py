@@ -6,7 +6,7 @@ import numpy as np
 import random
 import timeit
 from Simulation import Simulation
-
+from Map import Map
 import os
 from shutil import copyfile
 
@@ -17,10 +17,10 @@ from utils import import_test_configuration, set_sumo, set_test_path
 
 
 class Test(Simulation):
-    def __init__(self, Model, TrafficGen, sumo_cmd, max_steps, green_duration, yellow_duration, num_states,
+    def __init__(self, Model, Map_info, TrafficGen, sumo_cmd, max_steps, green_duration, yellow_duration, num_states,
                  num_actions):
 
-        super().__init__(Model, TrafficGen, sumo_cmd, max_steps, green_duration,
+        super().__init__(Model, Map_info, TrafficGen, sumo_cmd, max_steps, green_duration,
                          yellow_duration, num_states, num_actions)
 
         self._reward_episode = []
@@ -140,8 +140,13 @@ if __name__ == "__main__":
         dpi=96
     )
 
+    Map = Map(
+        config['map']
+    )
+
     Test = Test(
         Model,
+        Map,
         Traffic_Generator,
         sumo_cmd,
         config['max_steps'],

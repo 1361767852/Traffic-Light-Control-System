@@ -14,15 +14,17 @@ from shutil import copyfile
 from generate_traffic import Traffic_Generator
 from memory import Memory
 from model import TrainModel
+from Map import Map
+
 from visualization import Visualization
 from utils import import_train_configuration, set_sumo, set_train_path
 
 
 class Train(Simulation):
-    def __init__(self, Model, Memory, TrafficGen, sumo_cmd, gamma, max_steps, green_duration, yellow_duration,
+    def __init__(self, Model, Map_info, Memory, TrafficGen, sumo_cmd, gamma, max_steps, green_duration, yellow_duration,
                  num_states, num_actions, training_epochs):
 
-        super().__init__(Model, TrafficGen, sumo_cmd, max_steps, green_duration,
+        super().__init__(Model, Map_info, TrafficGen, sumo_cmd, max_steps, green_duration,
                          yellow_duration, num_states, num_actions)
 
         self._Memory = Memory
@@ -208,8 +210,13 @@ if __name__ == "__main__":
         dpi=96
     )
 
+    Map = Map(
+        config['map']
+    )
+
     Train = Train(
         Model,
+        Map,
         Memory,
         Traffic_Generator,
         sumo_cmd,

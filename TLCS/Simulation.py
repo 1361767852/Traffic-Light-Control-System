@@ -1,11 +1,9 @@
 import traci
 import numpy as np
-import random
-import timeit
 
 
 class Simulation:
-    def __init__(self, Model, TrafficGen, sumo_cmd, max_steps, green_duration, yellow_duration, num_states,
+    def __init__(self, Model, Map_info, TrafficGen, sumo_cmd, max_steps, green_duration, yellow_duration, num_states,
                  num_actions):
         self._Model = Model
         self._TrafficGen = TrafficGen
@@ -21,47 +19,12 @@ class Simulation:
 
         self._all_cars_waiting_time = {}
 
-  
-        self._Roads = ["gneE4", "-gneE4", "gneE5", "gneE6", "gneE8", "gneE9"]
-        self._lane_groups = [
+        self._map_info = Map_info
+        self._Roads = self._map_info.roads
+        self._lane_groups = self._map_info.lane_groups
 
-            ["gneE4_0", "gneE4_1"],
-
-            ["gneE5_0"],
-            ["gneE5_1"],
-
-            ["gneE6_0"],
-            ["gneE6_1"],
-
-            ["-gneE4_0"],
-            ["-gneE4_1"],
-
-            ["gneE8_0"],
-            ["gneE8_1"],
-
-            ["gneE9_0"],
-            ["gneE9_1"],
-        ]
-
-    def action_to_phase(self, code):
-        if code == 0:
-            return {"gneJ6": 0, "gneJ7": 0}
-        if code == 1:
-            return {"gneJ6": 0, "gneJ7": 2}
-        if code == 2:
-            return {"gneJ6": 0, "gneJ7": 4}
-        if code == 3:
-            return {"gneJ6": 2, "gneJ7": 0}
-        if code == 4:
-            return {"gneJ6": 2, "gneJ7": 2}
-        if code == 5:
-            return {"gneJ6": 2, "gneJ7": 4}
-        if code == 6:
-            return {"gneJ6": 4, "gneJ7": 0}
-        if code == 7:
-            return {"gneJ6": 4, "gneJ7": 2}
-        if code == 8:
-            return {"gneJ6": 4, "gneJ7": 4}
+    def action_to_state(self, code):
+        return self._map_info.states[code]
 
     def _collect_waiting_times(self):
         """
@@ -83,8 +46,8 @@ class Simulation:
     def _get_changed_actions(self, old_action_number, action_number):
 
         changed = []
-        old_actions = self.action_to_phase(old_action_number)
-        actions = self.action_to_phase(action_number)
+        old_actions = self.action_to_state(old_action_number)
+        actions = self.action_to_state(action_number)
 
         for j in actions:
             if actions[j] != old_actions[j]:
@@ -101,7 +64,7 @@ class Simulation:
             self._simulate(self._yellow_duration)
             phase_duration = self._green_duration - self._yellow_duration
 
-        coresp = self.action_to_phase(action_number)
+        coresp = self.action_to_state(action_number)
         for tls_id in coresp:
             traci.trafficlight.setPhase(tls_id, coresp[tls_id])
 
@@ -115,10 +78,10 @@ class Simulation:
 
         for tlsID in traci.trafficlight.getIDList():
             if tlsID in changed:
-                yellow_phase_code = self.action_to_phase(old_action_number)[tlsID] + 1
+                yellow_phase_code = self.action_to_state(old_action_number)[tlsID] + 1
                 traci.trafficlight.setPhase(tlsID, yellow_phase_code)
             else:
-                phase_code = self.action_to_phase(action_number)[tlsID]
+                phase_code = self.action_to_state(action_number)[tlsID]
                 traci.trafficlight.setPhase(tlsID, phase_code)
 
     def _get_queue_length(self):
@@ -130,7 +93,7 @@ class Simulation:
             queue_length += traci.edge.getLastStepHaltingNumber(id)
 
         return queue_length
-    
+
     def _get_CO2(self):
         """
         Retrieve co2 on the edges
