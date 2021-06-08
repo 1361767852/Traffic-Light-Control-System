@@ -17,8 +17,11 @@ class Simulation:
         self._num_states = num_states
         self._num_actions = num_actions
 
-        self._reward_episode = []
-        self._queue_length_episode = []
+        self._waiting_times = {}
+
+        self._all_cars_waiting_time = {}
+
+  
         self._Roads = ["gneE4", "-gneE4", "gneE5", "gneE6", "gneE8", "gneE9"]
         self._lane_groups = [
 
@@ -69,6 +72,7 @@ class Simulation:
             wait_time = traci.vehicle.getAccumulatedWaitingTime(car_id)
             road_id = traci.vehicle.getRoadID(car_id)  # get the road id where the car is located
             if road_id in self._Roads:  # consider only the waiting times of cars in incoming roads
+                self._all_cars_waiting_time[car_id] = wait_time
                 self._waiting_times[car_id] = wait_time
             else:
                 if car_id in self._waiting_times:  # a car that was tracked has cleared the intersection
@@ -126,6 +130,30 @@ class Simulation:
             queue_length += traci.edge.getLastStepHaltingNumber(id)
 
         return queue_length
+    
+    def _get_CO2(self):
+        """
+        Retrieve co2 on the edges
+        """
+        co2 = 0
+        for id in self._Roads:
+            co2 += traci.edge.getCO2Emission(id)
+        return co2
+
+    def _get_fuel(self):
+        """
+        Retrieve co2 on the edges
+        """
+        fuel = 0
+        for id in self._Roads:
+            fuel += traci.edge.getFuelConsumption(id)
+        return fuel
+
+    def _get_waiting_times(self):
+        """
+        get list of waiting times of the cars 
+        """
+        return list(self._all_cars_waiting_time.values())
 
     def _get_state(self):
         """

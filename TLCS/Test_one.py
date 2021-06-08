@@ -16,11 +16,11 @@ from visualization import Visualization
 from utils import import_test_configuration, set_sumo, set_test_path
 
 
-class Test(Simulation):
-    def __init__(self, Model, TrafficGen, sumo_cmd, max_steps, green_duration, yellow_duration, num_states,
+class Test_TTL(Simulation):
+    def __init__(self, TrafficGen, sumo_cmd, max_steps, green_duration, yellow_duration, num_states,
                  num_actions):
 
-        super().__init__(Model, TrafficGen, sumo_cmd, max_steps, green_duration,
+        super().__init__(None, TrafficGen, sumo_cmd, max_steps, green_duration,
                          yellow_duration, num_states, num_actions)
 
         self._reward_episode = []
@@ -34,7 +34,6 @@ class Test(Simulation):
         """
         start_time = timeit.default_timer()
 
-        # first, generate the route file for this simulation and set up sumo
         self._TrafficGen.generate_traffic(episode)
         traci.start(self._sumo_cmd)
         print("Simulating...")
@@ -46,23 +45,9 @@ class Test(Simulation):
         old_action = -1  # dummy init
 
         while self._step < self._max_steps:
-            # get current state of the intersection
-            current_state = self._get_state()
-
-            # calculate reward of previous action: (change in cumulative waiting time between actions) waiting time =
-            # seconds waited by a car since the spawn in the environment, cumulated for every car in incoming lanes
             current_total_wait = self._collect_waiting_times()
-            reward = old_total_wait - current_total_wait
+            self._simulate(self._green_duration)
 
-            # choose the light phase to activate, based on the current state of the intersection
-            action = self._choose_action(current_state)
-            self._set_phase_and_simulate(old_action, action)
-
-            # saving variables for later & accumulate reward
-            old_action = action
-            old_total_wait = current_total_wait
-
-            self._reward_episode.append(reward)
 
         traci.close()
         simulation_time = round(timeit.default_timer() - start_time, 1)
@@ -80,53 +65,40 @@ class Test(Simulation):
             traci.simulationStep()  # simulate 1 step in sumo
             self._step += 1  # update the step counter
             steps_todo -= 1
-
             queue_length = self._get_queue_length()
-            CO2_emission = self._get_CO2()
-            fuel = self._get_fuel()
-
-            self._fuel_episode.append(fuel)
             self._queue_length_episode.append(queue_length)
-            self._CO2_episode.append(CO2_emission)
 
-    def _choose_action(self, state):
-        """
-        Decide wheter to perform an explorative or exploitative action, according to an epsilon-greedy policy
-        """
-        return np.argmax(self._Model.predict_one(state))
+            fuel = self._get_fuel()
+            self._fuel_episode.append(fuel)
+
+            CO2_emission = self._get_CO2()
+            self._CO2_episode.append(CO2_emission)
 
     @property
     def queue_length_episode(self):
         return self._queue_length_episode
 
     @property
+    def reward_episode(self):
+        return self._reward_episode
+    
+    @property
     def CO2_episode(self):
         return self._CO2_episode
 
     @property
+    def fuel_episode(self):
+        return self._fuel_episode
+    
+    @property
     def waiting_times(self):
         return self._get_waiting_times()
 
-    @property
-    def fuel_episode(self):
-        return self._fuel_episode
-
-    @property
-    def reward_episode(self):
-        return self._reward_episode
-    
-
-
 
 if __name__ == "__main__":
-    config = import_test_configuration(config_file='settings/testing_settings.ini')
+    config = import_test_configuration(config_file='settings/testing_one_settings.ini')
     sumo_cmd = set_sumo(config['gui'], config['simulation_folder'], config['sumocfg_file_name'], config['max_steps'])
     model_path, plot_path = set_test_path(config['models_path_name'], config['model_to_test'])
-
-    Model = TestModel(
-        input_dim=config['num_states'],
-        model_path=model_path
-    )
 
     Traffic_Generator = Traffic_Generator(
         config["flow_file"],
@@ -140,8 +112,7 @@ if __name__ == "__main__":
         dpi=96
     )
 
-    Test = Test(
-        Model,
+    Test = Test_TTL(
         Traffic_Generator,
         sumo_cmd,
         config['max_steps'],
@@ -151,22 +122,19 @@ if __name__ == "__main__":
         config['num_actions']
     )
 
-
-
     print('\n----- Test episode')
     simulation_time = Test.run(config['episode_seed'])  # run the simulation
     print('Simulation time:', simulation_time, 's')
 
     print("----- Testing info saved at:", plot_path)
 
-    copyfile(src='settings/testing_settings.ini', dst=os.path.join(plot_path, 'testing_settings.ini'))
+    copyfile(src='settings/testing_one_settings.ini', dst=os.path.join(plot_path, 'testing_one_settings.ini'))
 
-    Visualization.save_data_and_plot(data=Test.reward_episode, filename='reward', xlabel='Action step', ylabel='Reward')
-    Visualization.save_data_and_plot(data=Test.queue_length_episode, filename='queue', xlabel='Step',
-                                     ylabel='Queue length (vehicles)')
-    Visualization.save_data_and_plot(data=Test.CO2_episode, filename='CO2', xlabel='Step',
-                                     ylabel='CO2 emission (mg)')
-    Visualization.save_data_and_plot(data=Test.fuel_episode, filename='fuel', xlabel='Step',
+    Visualization.save_data_and_plot(data=Test.queue_length_episode, filename='queue_one', xlabel='Step',
+                                    ylabel='Queue length (vehicles)')
+    Visualization.save_data_and_plot(data=Test.CO2_episode, filename='CO2_one', xlabel='Step',
+                                    ylabel='CO2 emission (mg)')
+    Visualization.save_data_and_plot(data=Test.fuel_episode, filename='fuel_one', xlabel='Step',
                                      ylabel='fuel consumption (ml)')
-    Visualization.save_data_and_plot(data=Test.waiting_times, filename='waiting_time', xlabel='Step',
+    Visualization.save_data_and_plot(data=Test.waiting_times, filename='waiting_time_one', xlabel='Step',
                                      ylabel='waiting_times (seconds)')

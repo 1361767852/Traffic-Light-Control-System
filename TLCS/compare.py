@@ -1,30 +1,61 @@
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 
-num_model = 140
+num_model = 2
 path = "models/model_" + str(num_model) + "/test/"
 
-if __name__ == '__main__':
 
-	with open(path + "plot_queue_data.txt", 'r') as file:
+
+
+
+def plot(desc_file, ylabel_graph, ylabel_bar):
+
+	with open(path + "plot_"+desc_file+"_data.txt", 'r') as file:
 		tfo = file.readlines()
 
-	with open(path + "plot_queue_ttl_data.txt", 'r') as file:
+	with open(path + "plot_"+desc_file+"_ttl_data.txt", 'r') as file:
 		ttl = file.readlines()
 
+	with open(path + "plot_"+desc_file+"_one_data.txt", 'r') as file:
+		one = file.readlines()
 
-	tfo = list(map(lambda x : int(x), tfo))
-	ttl = list(map(lambda x : int(x), ttl))
 
-	plt.plot(tfo, 'b', label="Our System")
-	plt.plot(ttl, 'r', label="Traditional Traffic System")
+	tfo = list(map(lambda x : float(x), tfo))
+	ttl = list(map(lambda x : float(x), ttl))
+	one = list(map(lambda x : float(x), one))
 
-	plt.legend(["Our System", "Traditional Traffic Light System"])
+	
+	plt.plot(one, 'r', label="One at a time")
+	plt.plot(ttl, 'b', label="Traditional Traffic System")
+	plt.plot(tfo, 'g', label="Our System")
 
-	plt.ylabel("Queue Length")
+
+	plt.legend(["One at a time", "Traditional Traffic Light System", "Our System"])
+
+	plt.ylabel(ylabel_graph)
 	plt.xlabel("Time (seconds)")
 
 	plt.show()
 
 
+	x = ["One at a time", "Traditional Traffic\n Light System", "Our System"]
+	y = [np.average(one), np.average(ttl), np.average(tfo)]
 
+	
+	plt.bar(x, y)
+
+	plt.ylabel(ylabel_bar)
+
+	plt.show()
+
+
+
+if __name__ == '__main__':
+
+	plot("queue", "Queue Length", "Average queue length")
+	plot("CO2", "CO2 emission (mg)", "Average CO2 emission (mg)")
+	plot("waiting_time", "Waiting_time (seconds)", "Average waiting_time (seconds)")
+	plot("fuel", "Fuel consumption (ml)", "Average fuel consumption (ml)")
+
+	

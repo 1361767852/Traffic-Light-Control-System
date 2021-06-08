@@ -25,6 +25,8 @@ class Test_TTL(Simulation):
 
         self._reward_episode = []
         self._queue_length_episode = []
+        self._CO2_episode = []
+        self._fuel_episode = []
 
     def run(self, episode):
         """
@@ -43,6 +45,8 @@ class Test_TTL(Simulation):
         old_action = -1  # dummy init
 
         while self._step < self._max_steps:
+
+            self._collect_waiting_times()
 
             self._simulate(self._green_duration)
 
@@ -66,6 +70,12 @@ class Test_TTL(Simulation):
             queue_length = self._get_queue_length()
             self._queue_length_episode.append(queue_length)
 
+            fuel = self._get_fuel()
+            self._fuel_episode.append(fuel)
+            
+            CO2_emission = self._get_CO2()
+            self._CO2_episode.append(CO2_emission)
+
     @property
     def queue_length_episode(self):
         return self._queue_length_episode
@@ -73,10 +83,22 @@ class Test_TTL(Simulation):
     @property
     def reward_episode(self):
         return self._reward_episode
+    
+    @property
+    def CO2_episode(self):
+        return self._CO2_episode
+
+    @property
+    def fuel_episode(self):
+        return self._fuel_episode
+    
+    @property
+    def waiting_times(self):
+        return self._get_waiting_times()
 
 
 if __name__ == "__main__":
-    config = import_test_configuration(config_file='settings/testing_settings.ini')
+    config = import_test_configuration(config_file='settings/testing_ttl_settings.ini')
     sumo_cmd = set_sumo(config['gui'], config['simulation_folder'], config['sumocfg_file_name'], config['max_steps'])
     model_path, plot_path = set_test_path(config['models_path_name'], config['model_to_test'])
 
@@ -108,7 +130,15 @@ if __name__ == "__main__":
 
     print("----- Testing info saved at:", plot_path)
 
-    copyfile(src='settings/testing_settings.ini', dst=os.path.join(plot_path, 'testing_settings.ini'))
+    copyfile(src='settings/testing_ttl_settings.ini', dst=os.path.join(plot_path, 'testing_ttl_settings.ini'))
 
     Visualization.save_data_and_plot(data=Test.queue_length_episode, filename='queue_ttl', xlabel='Step',
-                                     ylabel='Queue length (vehicles)')
+                                    ylabel='Queue length (vehicles)')
+    Visualization.save_data_and_plot(data=Test.CO2_episode, filename='CO2_ttl', xlabel='Step',
+                                    ylabel='CO2 emission (mg)')
+
+    Visualization.save_data_and_plot(data=Test.fuel_episode, filename='fuel_ttl', xlabel='Step',
+                                     ylabel='fuel consumption (ml)')
+
+    Visualization.save_data_and_plot(data=Test.waiting_times, filename='waiting_time_ttl', xlabel='Step',
+                                     ylabel='waiting_times (seconds)')
