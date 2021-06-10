@@ -92,18 +92,22 @@ class Traffic_Generator:
 		path = [start]
 		edge = start
 
-		while self.connections.get(edge):
+		conn = self.connections
+
+		while conn.get(edge):
 			
 			pb = np.random.random()
-			nexts = self.connections[edge]
+			nexts = conn[edge]
 
 			# the probabilities are sorted
 			for i in range(len(nexts)):
 
 				if pb < nexts[i]["probability"] or i == len(nexts) - 1 :
 
+
 					edge = nexts[i]["edge"]
 					path.append(edge)
+
 					break
 
 		return path
@@ -180,8 +184,8 @@ class Traffic_Generator:
 
 if __name__ == "__main__":
 
-	CONNECTION_FILE = "intersection/four/four_flow.json"
-	OUT_FILE = "intersection/four/four.rou.xml"
+	CONNECTION_FILE = "intersection/six/six_flow.json"
+	OUT_FILE = "intersection/six/six.rou.xml"
 	CAR_NUMBER = 2100
 	SIMULATION_TIME = 2000 # in seconds
 

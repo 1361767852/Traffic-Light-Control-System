@@ -2,10 +2,14 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
-num_model = 9
+num_model = 1
 path = "models/model_" + str(num_model) + "/test/"
 
 
+
+def addlabels(x,y):
+    for i in range(len(x)):
+        plt.text(i, y[i], y[i], ha = 'center')
 
 
 
@@ -44,6 +48,8 @@ def plot(desc_file, ylabel_graph, ylabel_bar):
 
 	
 	plt.bar(x, y)
+
+	addlabels(x,y)
 
 	plt.ylabel(ylabel_bar)
 

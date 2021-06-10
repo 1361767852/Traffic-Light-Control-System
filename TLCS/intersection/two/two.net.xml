@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 06/03/21 18:20:57 by Eclipse SUMO netedit Version 1.8.0
+<!-- generated on 06/09/21 20:39:13 by Eclipse SUMO netedit Version 1.8.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/netconvertConfiguration.xsd">
 
     <input>
-        <sumo-net-file value="C:\Personnal\TFO\TLCS\intersection\two.net.xml"/>
+        <sumo-net-file value="C:\Personnal\TFO\TLCS\intersection\two\two.net.xml"/>
     </input>
 
     <output>
-        <output-file value="C:\Personnal\TFO\TLCS\intersection\two.net.xml"/>
+        <output-file value="C:\Personnal\TFO\TLCS\intersection\two\two.net.xml"/>
     </output>
 
     <processing>
@@ -140,20 +140,20 @@
     </edge>
 
     <tlLogic id="gneJ6" type="static" programID="0" offset="0">
-        <phase duration="20" state="GGGGGGrrrrrr"/>
-        <phase duration="10" state="yyyyyyrrrrrr"/>
-        <phase duration="20" state="rrrrGGGGGGrr"/>
-        <phase duration="10" state="rrrryyyyyyrr"/>
-        <phase duration="20" state="GGrrrrrrGGGG"/>
-        <phase duration="10" state="yyrrrrrryyyy"/>
+        <phase duration="10" state="GGGGGGrrrrrr"/>
+        <phase duration="5"  state="yyyyyyrrrrrr"/>
+        <phase duration="10" state="rrrrGGGGGGrr"/>
+        <phase duration="5"  state="rrrryyyyyyrr"/>
+        <phase duration="10" state="GGrrrrrrGGGG"/>
+        <phase duration="5"  state="yyrrrrrryyyy"/>
     </tlLogic>
     <tlLogic id="gneJ7" type="static" programID="0" offset="0">
-        <phase duration="20" state="GGGrrrrrr"/>
-        <phase duration="10" state="yyyrrrrrr"/>
-        <phase duration="20" state="rrGGGGrrr"/>
-        <phase duration="10" state="rryyyyrrr"/>
-        <phase duration="20" state="rrrrrGGGG"/>
-        <phase duration="10" state="rrrrryyyy"/>
+        <phase duration="10" state="GGGrrrrrr"/>
+        <phase duration="5"  state="yyyrrrrrr"/>
+        <phase duration="10" state="rrGGGGrrr"/>
+        <phase duration="5"  state="rryyyyrrr"/>
+        <phase duration="10" state="rrrrrGGGG"/>
+        <phase duration="5"  state="rrrrryyyy"/>
     </tlLogic>
 
     <junction id="gneJ11" type="dead_end" x="12.76" y="285.98" incLanes="-gneE8_0 -gneE8_1" intLanes="" shape="12.76,285.98 19.16,286.00 12.76,285.98"/>

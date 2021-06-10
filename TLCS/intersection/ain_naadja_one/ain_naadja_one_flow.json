@@ -1,0 +1,64 @@
+{
+	"start": {
+		"gneE5": "0.35",
+		"gneE8": "0.7",
+		"gneE9": "0.85",
+		"gneE6": "1"
+	},
+	"gneE4": [
+		{
+			"edge": "-gneE5",
+			"probability": "1"
+		}
+	],
+	"gneE5": [
+		{
+			"edge": "-gneE4",
+			"probability": "0.3"
+		},
+		{
+			"edge": "-gneE6",
+			"probability": "1"
+		}
+	],
+	"gneE6": [
+		{
+			"edge": "-gneE5",
+			"probability": "0.2"
+		},
+		{
+			"edge": "-gneE4",
+			"probability": "1"
+		}
+	],
+	"gneE8": [
+		{
+			"edge": "-gneE9",
+			"probability": "0.2"
+		},
+		{
+			"edge": "gneE4",
+			"probability": "1"
+		}
+	],
+	"gneE9": [
+		{
+			"edge": "-gneE8",
+			"probability": "0.4"
+		},
+		{
+			"edge": "gneE4",
+			"probability": "1"
+		}
+	],
+	"-gneE4": [
+		{
+			"edge": "-gneE9",
+			"probability": "0.5"
+		},
+		{
+			"edge": "-gneE8",
+			"probability": "0.5"
+		}
+	]
+}
