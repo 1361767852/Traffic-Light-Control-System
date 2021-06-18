@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
-num_model = 1
+num_model = 9
 path = "models/model_" + str(num_model) + "/test/"
 
 
